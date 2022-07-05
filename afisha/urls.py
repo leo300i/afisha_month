@@ -16,21 +16,27 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from movie_app import views
+from . import swagger
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/directors/', views.director_list_view),
-    path('api/v1/reviews/', views.review_list_view),
-    path('api/v1/movies/', views.movie_list_view),
-
-    path('api/v1/director/<int:id>/', views.director_detail_view),
-    path('api/v1/review/<int:id>/', views.review_detail_view),
-    path('api/v1/movie/<int:id>/', views.movie_detail_view),
-
-    path('api/v1/movies/review', views.movie_list_view),
+    path('api/v1/directors/', views.DirectorCreateAPIView.as_view()),
+    path('api/v1/director/<int:pk>/', views.DirectorModelViewSet.as_view(
+        {'get': 'list', 'post': 'create', 'put': 'update', 'delete': 'destroy'}
+    )),
+    path('api/v1/reviews/', views.ReviewCreateAPIView.as_view()),
+    path('api/v1/review/<int:pk>/', views.ReviewModelViewSet.as_view(
+        {'get': 'list', 'post': 'create', 'put': 'update', 'delete': 'destroy'}
+    )),
+    path('api/v1/movies/', views.MovieListCreateAPIView.as_view()),
+    path('api/v1/movie/<int:id>/', views.MovieModelViewSet.as_view(
+        {'get': 'list', 'post': 'create', 'put': 'update', 'delete': 'destroy'}
+    )),
 
     path('api/v1/authorization/', views.authorization_view),
     path('api/v1/registration/', views.registration_view)
 ]
+
+urlpatterns += swagger.urlpatterns
 
 
