@@ -3,6 +3,8 @@ from abc import ABC
 from rest_framework import serializers
 from movie_app.models import Director, Review, Movie
 from rest_framework.exceptions import ValidationError
+from django.contrib.auth.models import User
+
 
 class DirectorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -68,6 +70,7 @@ class ReviewValidateSerializer(serializers.Serializer):
         except:
             raise ValidationError('Movie not found')
 
+
 class DirectorValidateSerializer(serializers.Serializer):
     title = serializers.CharField(min_length=3, max_length=100)
 
@@ -78,12 +81,13 @@ class DirectorValidateSerializer(serializers.Serializer):
         }
         return dict_
 
+
 class MovieValidateSerializer(serializers.Serializer):
     review = serializers.CharField(min_length=3, max_length=100)
     title = serializers.CharField(min_length=3, max_length=100)
     description = serializers.FloatField(max_value=0.5, min_value=100000)
     duration = serializers.CharField(min_length=3, max_length=100)
-    director = serializers.CharField(child=serializers.IntegerField)
+    director = serializers.CharField(min_length=3, max_length=100)
 
     @property
     def movie_data(self):
@@ -93,3 +97,20 @@ class MovieValidateSerializer(serializers.Serializer):
             'director': self.data.get('director', ''),
         }
         return dict_
+
+
+class UserLoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+
+class UserCreateSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate_username(self, username):
+        try:
+            User.objects.get(username)
+        except User.DoesNotExist:
+            return username
+        raise ValidationError('user already exists')

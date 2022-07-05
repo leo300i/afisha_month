@@ -3,8 +3,11 @@ from rest_framework.response import Response
 from movie_app.models import Director, Review, Movie
 from movie_app.serializers import DirectorSerializer, ReviewSerializer, MovieSerializer, \
     DirectorDetailSerializer, MovieDetailSerializer, ReviewDetailSerializer, DirectorValidateSerializer, \
-    MovieValidateSerializer, ReviewValidateSerializer
+    MovieValidateSerializer, ReviewValidateSerializer, UserLoginSerializer, UserCreateSerializer
 from rest_framework import status
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
 
 
 @api_view(['GET', 'POST'])
@@ -112,7 +115,7 @@ def review_detail_view(request, id):
         return Response(data=data)
     elif request.method == 'DELETE':
         review.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT,)
+        return Response(status=status.HTTP_204_NO_CONTENT, )
     elif request.method == 'PUT':
         text = request.data.get('text', '')
         movie = request.data.get('movie', '')
@@ -122,3 +125,27 @@ def review_detail_view(request, id):
         review.stars = stars
         review.save()
         return Response(data=ReviewDetailSerializer(Review).data)
+
+
+@api_view(['POST'])
+def authorization_view(request):
+    serializer = UserLoginSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = authenticate(**serializer.validated_data)
+    if user:
+        try:
+            token = Token.objects.get(user=user)
+        except Token.DoesNotExist:
+            token = Token.objects.create(user=user)
+        return Response(data={'key': token.key})
+    return Response(status=status.HTTP_403_FORBIDDEN,
+                    data={'error': 'credential data are wrong'})
+
+
+@api_view(['POST'])
+def registration_view(request):
+    serializer = UserCreateSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = User.objects.create_user(**serializer.validated_data)
+    return Response(status=status.HTTP_201_CREATED,
+                    data={'user_id': user.id})
